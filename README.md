@@ -3,7 +3,7 @@ Supplemental code for Pol1 termination MS. This repository provides step-by-step
 It is divided into two stages (cluster and desktop) according to computational demand. 
 All steps require git and conda installed
 
-# Cluster
+# Cluster processing
 ## Getting started
 
 Clone this repository
