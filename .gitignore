@@ -1,3 +1,13 @@
+# raw fastq files
+/00_raw/*.fastq.gz
+01_preprocessing/
+02_alignment/
+03_FetaureCounts/
+cleaninig.done
+.snakemake/
+names.tab
+seq_references/EF4.74_STAR_index/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

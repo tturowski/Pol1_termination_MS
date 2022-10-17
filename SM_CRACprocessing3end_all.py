@@ -9,14 +9,13 @@ path = "00_raw/"
 name_elem = '.fastq.gz'  #write file ending here
 
 #references
-STAR_INDEX = "/home/tomasz.turowski/seq_references/mm10/mm10_STAR_index/"
-GTF = "/home/tomasz.turowski/seq_references/mm10/ENCFF871VGR.gtf"
+STAR_INDEX = "seq_references/EF4.74_STAR_index/"
+GTF = "seq_references/Saccharomyces_cerevisiae.EF4.74.shortChNames_with_PolIII_transcripts_extended_slop_intergenic_sort.gtf"
 
 #parsing file names and preparatory jobs
 longName = [n.strip(name_elem) for n in os.listdir(path) if n.endswith(name_elem)]
-adaptors = [n.split("_")[0] for n in longName]
-barcodes = [n.split("_")[1] for n in longName]
-SAMPLES = ["_".join(n.split("_")[2:]) for n in longName]
+barcodes = [n.split("_")[0] for n in longName]
+SAMPLES = ["_".join(n.split("_")[1:]) for n in longName]
 
 def parseBarcode(bc):
     toGrep = "".join(re.findall(r'([ATCG])', bc))
@@ -25,11 +24,10 @@ def parseBarcode(bc):
 
 def readLengths(n):
 	f = path+n+name_elem
-	command = "zcat "+f+" | head -40 | fastqReadsLength.awk | cut -f1"
+	command = "zcat "+f+" | head -40 | scripts/fastqReadsLength.awk | cut -f1"
 	return int(subprocess.run([command],shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8'))
 
 df_names = pd.DataFrame({
-	'adaptor' : adaptors,
 	'barcode' : barcodes,
 	'bcLen'	  : [len(bc)+1 for bc in barcodes], #+1 for fastx_trimmer
 	'longName' : longName,
@@ -41,7 +39,6 @@ df_names.to_csv('names.tab', sep="\t")
 
 d1_name = df_names['longName'].to_dict()
 d2_bcLen = df_names['bcLen'].to_dict()
-d3_as = df_names['adaptor'].to_dict()
 d4_readLen = df_names['readLength'].to_dict()
 
 #SnakeMake pipeline
@@ -51,6 +48,7 @@ d4_readLen = df_names['readLength'].to_dict()
 rule all:
 	input:
 		expand("01_preprocessing/01e_{sample}_3end.fasta.gz",sample=SAMPLES),
+		STAR_INDEX+"index.done",
 		expand("02_alignment/{sample}.bam",sample=SAMPLES),
 		expand("02_alignment/{sample}.bam.bai",sample=SAMPLES),
 		"cleaninig.done",
@@ -106,22 +104,18 @@ rule debarcoding:
 	shell:
 		"gunzip -c {input} | fastx_trimmer -f {params.bcLen} | gzip > {output}"
 
-#functions for adaptor sequence
-def adSeq(wildcards):
-	sample_name = wildcards.sample
-	return d3_as[sample_name]
-
 rule flexbar_3end_trimming:
 	input:
 		"01_preprocessing/01c_{sample}_deBC.fasta.gz"
 	params:
-		adSeq = adSeq
+		adSeq = "TGGAATTCTCGGGTGCCAAGGC",
+		out_prefix = "01_preprocessing/01d_{sample}_flexbar"
 	output:
 		"01_preprocessing/01d_{sample}_flexbar.fasta.gz"
 	conda:
 		"envs/flexbar.yml" 
 	shell:
-		"flexbar -r {input} -t {params} -as params.adSeq -ao 4 -u 3 -m 7 -n 4 -bt RIGHT -z GZ"
+		"flexbar -r {input} -t {params.out_prefix} -as params.adSeq -ao 4 -u 3 -m 7 -n 4 -bt RIGHT -z GZ"
 
 def maxLen(wildcards):
 	sample_name = wildcards.sample
@@ -141,9 +135,23 @@ rule length_filtering:
 
 ########## ALIGNMENT ##########
 
+rule genome_generate:
+	input:
+		fasta_file = "seq_references/Saccharomyces_cerevisiae.EF4.74.dna.toplevel.shortChrNames.fasta",
+		gtf_file = GTF
+	output:
+		touch(STAR_INDEX+"index.done"),
+		index_check = STAR_INDEX+"SAindex",
+		outdir = directory(STAR_INDEX)
+	conda:
+		"envs/processing.yml"
+	shell:
+		"STAR --runThreadN 10 --genomeSAindexNbases 10 --runMode genomeGenerate --genomeDir {output.outdir} --genomeFastaFiles {input.fasta_file} --sjdbGTFfile {input.gtf_file}"
+
 rule load_genome:
 	input:
 		index_check = STAR_INDEX+"SAindex",
+		check_file = STAR_INDEX+"index.done"
 	params:
 		index_dir = STAR_INDEX
 	output:
@@ -184,7 +192,7 @@ rule unload_genome:
 		STAR --genomeLoad Remove --genomeDir {params.index_dir} --outFileNamePrefix logs/STARunload_
 		rm {input.idx}
 		"""
-
+ruleorder: align > sort
 ########## POSTPROCESSING ##########
 
 rule sort:
