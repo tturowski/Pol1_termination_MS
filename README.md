@@ -11,7 +11,7 @@ Clone this repository
 git clone git@github.com:tturowski/Pol1_termination_MS.git
 ```
 
-Create conda environment
+Create conda environment (you can use mamba instead)
 ```
-conda  env create -f ensv/snakemake.yml
+conda env create -f ensv/snakemake.yml
 ```
