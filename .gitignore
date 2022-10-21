@@ -3,6 +3,8 @@
 01_preprocessing/
 02_alignment/
 03_FetaureCounts/
+04_BigWig/*.sam
+bifx_processing/
 cleaninig.done
 .snakemake/
 names.tab

@@ -57,7 +57,16 @@ rule all:
 		expand("04_BigWig/{sample}_raw_plus.bw",sample=SAMPLES),
 		expand("04_BigWig/{sample}_raw_minus.bw",sample=SAMPLES),
 		expand("04_BigWig/{sample}_CPM_plus.bw",sample=SAMPLES),
-		expand("04_BigWig/{sample}_CPM_minus.bw",sample=SAMPLES)
+		expand("04_BigWig/{sample}_CPM_minus.bw",sample=SAMPLES),
+		expand("04_BigWig/{sample}.sam",sample=SAMPLES)
+		# expand("04_BigWig/{sample}_PROFILE_read_fwd.bw",sample=SAMPLES),
+		# expand("04_BigWig/{sample}_PROFILE_read_rev.bw",sample=SAMPLES),
+		# expand("04_BigWig/{sample}_PROFILE_5end_fwd.bw",sample=SAMPLES),
+		# expand("04_BigWig/{sample}_PROFILE_5end_rev.bw",sample=SAMPLES),
+		# expand("04_BigWig/{sample}_PROFILE_3end_fwd.bw",sample=SAMPLES),
+		# expand("04_BigWig/{sample}_PROFILE_3end_rev.bw",sample=SAMPLES),
+		# expand("04_BigWig/{sample}_PROFILE_3end_polyA_fwd.bw",sample=SAMPLES),
+		# expand("04_BigWig/{sample}_PROFILE_3end_polyA_rev.bw",sample=SAMPLES)	
 
 ########## PREPROCESSING ##########
 
@@ -239,7 +248,7 @@ rule featureCounts:
 		featureCounts -s 1 -a {params.gtf} -o {output.uniq} {input.bam}
 		"""
 
-rule BigWigs_CPM:
+rule bamcoverage_CPM:
 	input:
 		bam = "02_alignment/{sample}.bam",
 		bai = "02_alignment/{sample}.bam.bai"
@@ -254,7 +263,7 @@ rule BigWigs_CPM:
 		bamCoverage --bam {input.bam} -of bigwig -o {output.bwM} --filterRNAstrand forward --normalizeUsing CPM --binSize 1
 		"""
 
-rule BigWigs_raw:
+rule bamcoverage_raw:
 	input:
 		bam = "02_alignment/{sample}.bam",
 		bai = "02_alignment/{sample}.bam.bai"
@@ -268,3 +277,57 @@ rule BigWigs_raw:
 		bamCoverage --bam {input.bam} -of bigwig -o {output.bwP} --filterRNAstrand reverse --binSize 1
 		bamCoverage --bam {input.bam} -of bigwig -o {output.bwM} --filterRNAstrand forward --binSize 1
 		"""
+
+rule bam2sam:
+	input:
+		bam = "02_alignment/{sample}.bam",
+		bai = "02_alignment/{sample}.bam.bai"
+	output:
+		sam = "04_BigWig/{sample}.sam"
+	conda:
+		"envs/processing.yml"
+	shell:
+		"""
+		samtools view -h {input.bam} > {output.sam}
+		"""
+
+# rule trxtools_5end:
+# 	input:
+# 		"04_BigWig/{sample}.sam"
+# 	output:
+# 		"04_BigWig/{sample}_PROFILE_5end_fwd.bw",
+# 		"04_BigWig/{sample}_PROFILE_5end_rev.bw"
+# 	conda:
+# 		"envs/processing.yml"
+# 	shell:
+# 		"""
+# 		SAM2profilesGenomic.py -u 5end -f {input}
+# 		"""
+
+# rule trxtools_3end:
+# 	input:
+# 		"04_BigWig/{sample}.sam"
+# 	output:
+# 		"04_BigWig/{sample}_PROFILE_3end_fwd.bw",
+# 		"04_BigWig/{sample}_PROFILE_3end_rev.bw",
+# 		"04_BigWig/{sample}_PROFILE_3end_polyA_fwd.bw",
+# 		"04_BigWig/{sample}_PROFILE_3end_polyA_rev.bw"
+# 	conda:
+# 		"envs/processing.yml"
+# 	shell:
+# 		"""
+# 		SAM2profilesGenomic.py -u 3end -n -f {input}
+# 		"""
+
+# rule trxtools_reads:
+# 	input:
+# 		"04_BigWig/{sample}.sam"
+# 	output:
+# 		"04_BigWig/{sample}_PROFILE_read_fwd.bw",
+# 		"04_BigWig/{sample}_PROFILE_read_rev.bw"
+# 	conda:
+# 		"envs/processing.yml"
+# 	shell:
+# 		"""
+# 		SAM2profilesGenomic.py -u read -f {input}
+# 		"""
