@@ -14,4 +14,3 @@ dependencies:
   - seqan-library=2.4.0=0
   - tbb=2020.2=h4bd325d_4
   - zlib=1.2.12=h166bdaf_2
-prefix: /home/tomasz.turowski/mambaforge/envs/flexbar

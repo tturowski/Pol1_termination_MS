@@ -13,6 +13,7 @@ STAR_INDEX = "seq_references/EF4.74_STAR_index/"
 GTF = "seq_references/Saccharomyces_cerevisiae.EF4.74.shortChNames_with_PolIII_transcripts_extended_slop_intergenic_sort.gtf"
 
 #parsing file names and preparatory jobs
+# longName = [n.strip(name_elem) for n in os.listdir(path) if n.endswith(name_elem) and 'Rpa190HTP_wt_none_6' in n]
 longName = [n.strip(name_elem) for n in os.listdir(path) if n.endswith(name_elem)]
 barcodes = [n.split("_")[0] for n in longName]
 SAMPLES = ["_".join(n.split("_")[1:]) for n in longName]
@@ -74,21 +75,22 @@ def bcFile(wildcards):
 	sample_name = wildcards.sample
 	return path+d1_name[sample_name]+name_elem
 
-rule QC:
-	input:
-		bcFile
-	params:
-		"01_preprocessing/01a_{sample}_QC"
-	output:
-		"01_preprocessing/01a_{sample}_QC.fastq.gz"
-	conda:
-		"envs/flexbar.yml"
-	shell:
-		"flexbar -r {input} -t {params} -q TAIL -qf i1.8 -qt 20 -z GZ"
+# droped QC to avoid keeping PCR duplicates artificially
+# rule QC:
+# 	input:
+# 		bcFile
+# 	params:
+# 		"01_preprocessing/01a_{sample}_QC"
+# 	output:
+# 		"01_preprocessing/01a_{sample}_QC.fastq.gz"
+# 	conda:
+# 		"envs/flexbar.yml"
+# 	shell:
+# 		"flexbar -r {input} -t {params} -q TAIL -qf i1.8 -qt 20 -z GZ"
 
 rule collapsing:
 	input:
-		"01_preprocessing/01a_{sample}_QC.fastq.gz"
+		bcFile
 	output:
 		"01_preprocessing/01b_{sample}_comp.fasta.gz"
 	conda:
@@ -124,7 +126,7 @@ rule flexbar_3end_trimming:
 	conda:
 		"envs/flexbar.yml" 
 	shell:
-		"flexbar -r {input} -t {params.out_prefix} -as params.adSeq -ao 4 -u 3 -m 7 -n 4 -bt RIGHT -z GZ"
+		"flexbar -r {input} -t {params.out_prefix} -as {params.adSeq} -ao 4 -u 3 -m 7 -n 4 -bt RIGHT -z GZ"
 
 def maxLen(wildcards):
 	sample_name = wildcards.sample
@@ -182,7 +184,7 @@ rule align:
 	conda:
 		"envs/processing.yml"
 	shell:
-		"STAR --outFileNamePrefix {params.prefix} --readFilesCommand zcat --genomeDir {params.index_dir} --genomeLoad LoadAndKeep --outSAMtype BAM Unsorted --readFilesIn {input.reads}"
+		"STAR --outFileNamePrefix {params.prefix} --readFilesCommand zcat --genomeDir {params.index_dir} --genomeLoad LoadAndKeep --outSAMtype BAM Unsorted --readFilesIn {input.reads} --limitOutSJcollapsed 2000000"
 
 rule unload_genome:
 	# Delete the loading.done flag file otherwise subsequent runs of the pipeline 
