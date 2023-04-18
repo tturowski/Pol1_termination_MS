@@ -1,4 +1,5 @@
 # raw fastq files
+old/
 /00_raw/*.fastq.gz
 01_preprocessing/
 02_alignment/

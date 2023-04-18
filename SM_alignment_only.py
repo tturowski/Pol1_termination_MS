@@ -27,10 +27,10 @@ rule all:
 		"cleaninig.done",
 		"03_FetaureCounts/featureCounts_multimappers.list",
 		"03_FetaureCounts/featureCounts_uniq.list",
-		expand("04_BigWig/{sample}_raw_plus.bw",sample=SAMPLES),
-		expand("04_BigWig/{sample}_raw_minus.bw",sample=SAMPLES),
-		expand("04_BigWig/{sample}_CPM_plus.bw",sample=SAMPLES),
-		expand("04_BigWig/{sample}_CPM_minus.bw",sample=SAMPLES),
+		expand("04_BigWig/{sample}_raw_fwd.bw",sample=SAMPLES),
+		expand("04_BigWig/{sample}_raw_rev.bw",sample=SAMPLES),
+		expand("04_BigWig/{sample}_CPM_fwd.bw",sample=SAMPLES),
+		expand("04_BigWig/{sample}_CPM_rev.bw",sample=SAMPLES),
 		expand("04_BigWig/{sample}.sam",sample=SAMPLES)
 		# expand("04_BigWig/{sample}_PROFILE_read_fwd.bw",sample=SAMPLES),
 		# expand("04_BigWig/{sample}_PROFILE_read_rev.bw",sample=SAMPLES),
@@ -152,14 +152,14 @@ rule bamcoverage_CPM:
 		bam = "02_alignment/{sample}.bam",
 		bai = "02_alignment/{sample}.bam.bai"
 	output:
-		bwP = "04_BigWig/{sample}_CPM_plus.bw",
-		bwM = "04_BigWig/{sample}_CPM_minus.bw"
+		bwF = "04_BigWig/{sample}_CPM_fwd.bw",
+		bwR = "04_BigWig/{sample}_CPM_rev.bw"
 	conda:
 		"envs/processing.yml"
 	shell:
 		"""
-		bamCoverage --bam {input.bam} -of bigwig -o {output.bwP} --filterRNAstrand reverse --normalizeUsing CPM --binSize 1
-		bamCoverage --bam {input.bam} -of bigwig -o {output.bwM} --filterRNAstrand forward --normalizeUsing CPM --binSize 1
+		bamCoverage --bam {input.bam} -of bigwig -o {output.bwF} --filterRNAstrand reverse --normalizeUsing CPM --binSize 1
+		bamCoverage --bam {input.bam} -of bigwig -o {output.bwR} --filterRNAstrand forward --normalizeUsing CPM --binSize 1
 		"""
 
 rule bamcoverage_raw:
@@ -167,14 +167,14 @@ rule bamcoverage_raw:
 		bam = "02_alignment/{sample}.bam",
 		bai = "02_alignment/{sample}.bam.bai"
 	output:
-		bwP = "04_BigWig/{sample}_raw_plus.bw",
-		bwM = "04_BigWig/{sample}_raw_minus.bw"
+		bwF = "04_BigWig/{sample}_raw_fwd.bw",
+		bwR = "04_BigWig/{sample}_raw_rev.bw"
 	conda:
 		"envs/processing.yml"
 	shell:
 		"""
-		bamCoverage --bam {input.bam} -of bigwig -o {output.bwP} --filterRNAstrand reverse --binSize 1
-		bamCoverage --bam {input.bam} -of bigwig -o {output.bwM} --filterRNAstrand forward --binSize 1
+		bamCoverage --bam {input.bam} -of bigwig -o {output.bwF} --filterRNAstrand reverse --binSize 1
+		bamCoverage --bam {input.bam} -of bigwig -o {output.bwR} --filterRNAstrand forward --binSize 1
 		"""
 
 rule bam2sam:
