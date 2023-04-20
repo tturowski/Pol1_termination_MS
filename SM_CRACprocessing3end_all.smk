@@ -14,7 +14,7 @@ GTF = "seq_references/Saccharomyces_cerevisiae.EF4.74.shortChNames_with_PolIII_t
 
 #parsing file names and preparatory jobs
 # longName = [n.strip(name_elem) for n in os.listdir(path) if n.endswith(name_elem) and 'Rpa190HTP_wt_none_6' in n]
-longName = [n.strip(name_elem) for n in os.listdir(path) if n.endswith(name_elem)]
+longName = [n.replace(name_elem,"") for n in os.listdir(path) if n.endswith(name_elem)]
 barcodes = [n.split("_")[0] for n in longName]
 SAMPLES = ["_".join(n.split("_")[1:]) for n in longName]
 
@@ -71,7 +71,9 @@ rule all:
 
 ########## PREPROCESSING ##########
 
-
+def bcFile(wildcards):
+	sample_name = wildcards.sample
+	return path+d1_name[sample_name]+name_elem
 
 # droped QC to avoid keeping PCR duplicates artificially
 # rule QC:
