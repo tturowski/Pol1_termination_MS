@@ -1,6 +1,7 @@
 # raw fastq files
 old/
 /00_raw/*.fastq.gz
+/00_raw/too_low_reads/
 01_preprocessing/
 02_alignment/
 03_FetaureCounts/
