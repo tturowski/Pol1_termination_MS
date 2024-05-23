@@ -3,6 +3,9 @@ import pandas as pd
 
 # command used to create processing env
 # mamba create -n processing -y -c conda-forge -c bioconda deeptools pyCRAC salmon star subread fastx_toolkit samtools
+# run
+# snakemake -c12 -j12 --use-conda -slurm -s SM_CRACprocessing3end_all.smk
+
 
 #paths
 path = "00_raw/"
@@ -159,23 +162,9 @@ rule genome_generate:
 	shell:
 		"STAR --runThreadN 10 --genomeSAindexNbases 10 --runMode genomeGenerate --genomeDir {output.outdir} --genomeFastaFiles {input.fasta_file} --sjdbGTFfile {input.gtf_file}"
 
-rule load_genome:
-	input:
-		index_check = STAR_INDEX+"SAindex",
-		check_file = STAR_INDEX+"index.done"
-	params:
-		index_dir = STAR_INDEX
-	output:
-		touch('loading.done')
-	conda:
-		"envs/processing.yml"
-	shell:
-		"STAR --genomeLoad LoadAndExit --genomeDir {params.index_dir}"
-
 rule align:
 	input:
 		reads = "01_preprocessing/01e_{sample}_3end.fasta.gz",
-		idx = 'loading.done'
 	params:
 		index_dir = STAR_INDEX,
 		prefix = "02_alignment/{sample}_STAR_"
@@ -186,29 +175,12 @@ rule align:
 	shell:
 		"STAR --outFileNamePrefix {params.prefix} --readFilesCommand zcat --genomeDir {params.index_dir} --genomeLoad LoadAndKeep --outSAMtype BAM Unsorted --readFilesIn {input.reads} --limitOutSJcollapsed 2000000"
 
-rule unload_genome:
-	# Delete the loading.done flag file otherwise subsequent runs of the pipeline 
-	# will fail to load the genome again if STAR alignment is needed.
-	input:
-		bam = expand("02_alignment/{sample}_STAR_Aligned.out.bam",sample=SAMPLES),
-		idx = 'loading.done'
-	params:
-		index_dir = STAR_INDEX
-	output:
-		"logs/STARunload_Log.out",
-	conda:
-		"envs/processing.yml"
-	shell:
-		"""
-		STAR --genomeLoad Remove --genomeDir {params.index_dir} --outFileNamePrefix logs/STARunload_
-		rm {input.idx}
-		"""
+
 ruleorder: align > sort
 ########## POSTPROCESSING ##########
 
 rule sort:
 	input:
-		log = "logs/STARunload_Log.out", #wait to unload_genome
 		bam = "02_alignment/{sample}_STAR_Aligned.out.bam"
 	output:
 		bam = "02_alignment/{sample}.bam",
@@ -221,18 +193,18 @@ rule sort:
 		samtools index {output.bam}
 		"""
 
-rule clean:
-	input:
-		expand("02_alignment/{sample}.bam.bai",sample=SAMPLES)
-	output:
-		touch("cleaninig.done")
-	conda:
-		"envs/processing.yml"
-	shell:
-		"""
-		rm -r logs/
-		rm Aligned.out.sam Log.final.out Log.out Log.progress.out SJ.out.tab
-		"""
+# rule clean:
+# 	input:
+# 		expand("02_alignment/{sample}.bam.bai",sample=SAMPLES)
+# 	output:
+# 		touch("cleaninig.done")
+# 	conda:
+# 		"envs/processing.yml"
+# 	shell:
+# 		"""
+# 		rm -r logs/
+# 		rm Aligned.out.sam Log.final.out Log.out Log.progress.out SJ.out.tab
+# 		"""
 
 rule featureCounts:
 	input:
