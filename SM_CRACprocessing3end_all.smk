@@ -55,7 +55,7 @@ rule all:
 		STAR_INDEX+"index.done",
 		expand("02_alignment/{sample}.bam",sample=SAMPLES),
 		expand("02_alignment/{sample}.bam.bai",sample=SAMPLES),
-		"cleaninig.done",
+		# "cleaninig.done",
 		"03_FetaureCounts/featureCounts_multimappers.list",
 		"03_FetaureCounts/featureCounts_uniq.list",
 		expand("04_BigWig/{sample}_raw_plus.bw",sample=SAMPLES),

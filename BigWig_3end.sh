@@ -5,7 +5,7 @@
 #SBATCH --nodes=4
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=10G
-#SBATCH --time=24:00:00
+#SBATCH --time=72:00:00
 
 # Load any required modules
 # module load your_module_name
