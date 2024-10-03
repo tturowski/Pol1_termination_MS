@@ -19,7 +19,7 @@ conda activate processing
 cd /home/tomasz.turowski/99_manuscripts/Pol1_termination_MS/04_BigWig
 
 # Loop through each SAM file and run SAM2profilesGenomic.py
-for f in *sam; do
+for f in *2409*sam; do
     SAM2profilesGenomic.py -f $f -u 3end -n -s polyA &
 done
 
