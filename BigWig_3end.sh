@@ -21,7 +21,11 @@ cd /home/tomasz.turowski/99_manuscripts/Pol1_termination_MS/04_BigWig
 # Loop through each SAM file and run SAM2profilesGenomic.py
 for f in *sam; do
     SAM2profilesGenomic.py -f $f -u 3end -n -s polyA &
+<<<<<<< HEAD
 #    SAM2profilesGenomic.py -f $f -u 5end &
+=======
+    SAM2profilesGenomic.py -f $f -u 5end &
+>>>>>>> 6a552995de66d68ed29acc0378f0d70b8a2c35fe
 done
 
 # Wait for all background jobs to finish
