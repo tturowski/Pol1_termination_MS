@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=BigWig_3end_nc
-#SBATCH --output=BigWig_3end_nc_%j.out
-#SBATCH --error=BigWig_3end_nc_%j.err
-#SBATCH --nodes=12
+#SBATCH --output=BigWig_5end_nc_%j.out
+#SBATCH --error=BigWig_5end_nc_%j.err
+#SBATCH --nodes=8
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
 #SBATCH --time=72:00:00
@@ -20,8 +20,8 @@ cd /home/tomasz.turowski/99_manuscripts/Pol1_termination_MS/04_BigWig
 
 # Loop through each SAM file and run SAM2profilesGenomic.py
 for f in *sam; do
-    SAM2profilesGenomic.py -f $f -u 3end -n -s polyA &
-#    SAM2profilesGenomic.py -f $f -u 5end &
+#    SAM2profilesGenomic.py -f $f -u 3end -n -s polyA &
+    SAM2profilesGenomic.py -f $f -u 5end &
 done
 
 # Wait for all background jobs to finish
